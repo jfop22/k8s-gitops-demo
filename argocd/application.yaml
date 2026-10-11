@@ -1,0 +1,22 @@
+# Tells Argo CD: "keep the cluster identical to the ./deploy folder in this git repo".
+# Apply this ONCE by hand; after that, everything is changed through git.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jfop22/k8s-gitops-demo.git
+    targetRevision: main
+    path: deploy
+  destination:
+    server: https://kubernetes.default.svc   # the cluster Argo CD itself runs in
+    namespace: demo
+  syncPolicy:
+    automated:
+      prune: true      # delete things removed from git
+      selfHeal: true   # undo manual changes made with kubectl
+    syncOptions:
+      - CreateNamespace=true
