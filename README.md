@@ -153,6 +153,20 @@ Open **http://localhost**. The page loads from the portal pod, and its JavaScrip
 - **Rollback:** `git revert HEAD ; git push` and the cluster follows.
 - **Shipping new code:** change app code → `docker build -t demo-api:v2 apps/api` → `kind load docker-image demo-api:v2 --name demo` → change `image:` to `demo-api:v2` in `deploy/api.yaml` → commit, push. (In real projects a CI pipeline builds/pushes the image and updates that tag automatically.)
 
+## Rebuild everything with one command
+
+`bootstrap.ps1` runs steps 0-6 above (cluster, ingress, images, Argo CD, Argo UI ingress, application) in order.
+It is safe to run repeatedly: stages that already exist are re-applied, not duplicated.
+
+```powershell
+.\bootstrap.ps1             # create or repair the environment
+.\bootstrap.ps1 -Recreate   # delete the cluster and build a fresh one
+```
+- Image names/tags are read from `deploy/*.yaml`, so after bumping a tag it builds exactly what git asks for.
+- The Argo admin password is copied to the clipboard instead of printed.
+- It reads from git what the *app* should look like; it never needs to know about the app's contents.
+  A fresh cluster ends up identical because the desired state lives in the repo.
+
 ## Cleanup
 ```powershell
 kind delete cluster --name demo
