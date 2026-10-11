@@ -5,7 +5,7 @@ metadata:
   labels:
     app: api
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: api
@@ -24,7 +24,7 @@ spec:
             - name: APP_VERSION
               value: "v1"
             - name: GREETING
-              value: "Hello from the API"
+              value: "Hello from the API - deployed via GitOps!"
           readinessProbe:
             httpGet:
               path: /healthz
