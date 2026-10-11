@@ -88,13 +88,18 @@ kubectl wait -n argocd --for=condition=ready pod -l app.kubernetes.io/name=argoc
 - **Why `--server-side`:** Argo's definitions are so large that the default client-side apply fails with an "annotation too long" error.
 - **Enables:** the GitOps engine. It's installed but doing nothing yet, because we haven't told it which repo to watch (step 6).
 
-Open the UI:
+Make the UI reachable at **http://argocd.localhost** through the nginx ingress:
 ```powershell
-kubectl port-forward svc/argocd-server -n argocd 8080:443
+kubectl patch cm argocd-cmd-params-cm -n argocd --patch-file argocd/insecure-patch.yaml
+kubectl rollout restart deploy argocd-server -n argocd
+kubectl apply -f argocd/ingress.yaml
 ```
-- **What/why:** the Argo UI is only reachable inside the cluster. `port-forward` temporarily tunnels `localhost:8080` to it. Keep this terminal open. (Production would use an Ingress instead.)
+- **What:** the first command turns off Argo's own HTTPS (it serves a self-signed certificate, awkward behind an ingress), the second restarts the server to pick that up, the third adds an Ingress routing the host `argocd.localhost` to the Argo server.
+- **Why:** the UI is only reachable inside the cluster by default. This uses the same front door as the demo app, so it is permanent: no terminal to keep open, and it survives restarts. Browsers resolve `*.localhost` to your own machine automatically.
+- **Local lab only:** plain HTTP is fine on your own PC. A real setup terminates TLS at the ingress with a real certificate.
+- **Fallback** if that ever misbehaves: `kubectl port-forward svc/argocd-server -n argocd 8080:80`, then http://localhost:8080 (keep that terminal open).
 
-Open https://localhost:8080 (accept the certificate warning, it's self-signed). User `admin`; password:
+Open http://argocd.localhost. User `admin`; password:
 ```powershell
 $p = kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}"
 [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($p))

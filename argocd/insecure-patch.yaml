@@ -1,0 +1,7 @@
+# Makes the Argo CD server speak plain HTTP inside the cluster, so the nginx
+# ingress (argocd/ingress.yaml) can route to it. Local lab only.
+# Apply with:
+#   kubectl patch cm argocd-cmd-params-cm -n argocd --patch-file argocd/insecure-patch.yaml
+#   kubectl rollout restart deploy argocd-server -n argocd
+data:
+  server.insecure: "true"

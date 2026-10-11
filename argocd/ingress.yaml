@@ -1,0 +1,25 @@
+# Exposes the Argo CD UI through the nginx ingress at http://argocd.localhost
+# (replaces the manual `kubectl port-forward`). Applied by hand once, like
+# application.yaml, because it configures Argo CD itself (not the demo app).
+#
+# Requires Argo CD's own HTTPS to be off, so it speaks plain HTTP behind the ingress:
+#   kubectl patch cm argocd-cmd-params-cm -n argocd --patch-file argocd/insecure-patch.yaml
+#   kubectl rollout restart deploy argocd-server -n argocd
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server
+  namespace: argocd
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: argocd.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  name: http
